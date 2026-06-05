@@ -284,3 +284,174 @@ Tomcat Deploys WAR
            ↓
 Container Running Application
 ```
+# Dockerizing a Spring Boot JAR Application
+
+## 01. Pull Base Image
+
+Start with a lightweight Java runtime environment.
+
+```bash
+docker pull openjdk:17-jdk-alpine
+```
+
+* Downloads OpenJDK base image from Docker Hub.
+* Provides the JVM required to run the JAR file.
+
+---
+
+## 02. Set Working Directory
+
+Choose a clean folder inside the container to store your application.
+
+```dockerfile
+WORKDIR /app
+```
+
+* Creates the `/app` directory inside the container.
+* All subsequent commands execute from this directory.
+
+---
+
+## 03. Add JAR File
+
+Move the packaged JAR into the container.
+
+```dockerfile
+ADD target/DockerDemo.jar app.jar
+```
+
+* Copies the JAR from the host machine into `/app`.
+* Renames it to `app.jar` for simplicity.
+
+### COPY vs ADD
+
+| COPY                                 | ADD                                                         |
+| ------------------------------------ | ----------------------------------------------------------- |
+| Only copies files/directories.       | Can copy files/directories and perform additional features. |
+| Simple and preferred for most cases. | Can extract local `.tar` archives automatically.            |
+| More predictable.                    | Slightly more powerful but often unnecessary.               |
+
+**For a normal Spring Boot JAR, `COPY` is generally recommended, but `ADD` also works.**
+
+---
+
+## 04. Define Startup Command
+
+Tell Docker how to run the application when the container starts.
+
+```dockerfile
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+* JVM automatically executes the JAR.
+* Container starts the Spring Boot application immediately.
+
+### CMD vs ENTRYPOINT
+
+| CMD                                                  | ENTRYPOINT                                                         |
+| ---------------------------------------------------- | ------------------------------------------------------------------ |
+| Provides a default command.                          | Defines the main command of the container.                         |
+| Can be easily overridden when running the container. | Runs every time the container starts unless explicitly overridden. |
+| Used for optional/default behavior.                  | Used when the container should always execute a specific program.  |
+
+#### Example
+
+Dockerfile:
+
+```dockerfile
+CMD ["java", "-jar", "app.jar"]
+```
+
+Running:
+
+```bash
+docker run myimage ls
+```
+
+Output:
+
+* `ls` replaces the CMD.
+
+---
+
+Dockerfile:
+
+```dockerfile
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+Running:
+
+```bash
+docker run myimage
+```
+
+Output:
+
+* Always runs the Spring Boot application.
+
+---
+
+## 05. Build Docker Image
+
+Create a reusable image containing the application and runtime environment.
+
+```bash
+docker build -t dockerdemo:1.0 .
+```
+
+* Reads instructions from the Dockerfile.
+* Creates an image tagged `dockerdemo:1.0`.
+
+---
+
+## 06. Run Docker Container
+
+Start a live instance of the Docker image.
+
+```bash
+docker run -p 8080:8080 dockerdemo:1.0
+```
+
+* Launches a container from the image.
+* Maps container port `8080` to host port `8080`.
+
+### Access the Application
+
+```text
+http://localhost:8080
+```
+
+* Open the URL in a browser to access the application.
+
+---
+
+## Complete Dockerfile
+
+```dockerfile
+FROM openjdk:17-jdk-alpine
+
+WORKDIR /app
+
+ADD target/DockerDemo.jar app.jar
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+### Dockerfile Flow
+
+```text
+Pull OpenJDK Image
+        ↓
+Set Working Directory (/app)
+        ↓
+Add DockerDemo.jar
+        ↓
+Define ENTRYPOINT
+        ↓
+Build Image
+        ↓
+Run Container
+        ↓
+Application Available on Port 8080
+```
