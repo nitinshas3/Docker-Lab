@@ -718,3 +718,9 @@ With Volume:
 Volume = Persistent Storage
 Container = Running Application
 ```
+### Docker Image Storage & Sharing
+
+- `docker build` stores the image **locally** on your machine.
+- Images are **not uploaded to Docker Hub automatically**.
+- Share online: `docker push` → Docker Hub/Registry → others use `docker pull`.
+- Share offline: `docker save` → `.tar` file → others use `docker load`.
